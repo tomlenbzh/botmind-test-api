@@ -4,6 +4,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthService } from './service/auth.service';
 import { AuthController } from './controller/auth.controller';
 import { UserModule } from 'src/user/user.module';
+import { SECRET } from 'src/constants';
+import { JwtAuthGuard } from './guards/jwt.guard';
+import { JwtStrategy } from './guards/jwt-strategy';
+import { RolesGuard } from './guards/roles.guard';
 
 @Module({
   imports: [
@@ -12,13 +16,13 @@ import { UserModule } from 'src/user/user.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (config: ConfigService) => ({
-        secretOrPrivateKey: 'azerty', // TODO > PASS IN ENVIRONMENT VARIABLES
+        secret: SECRET, // TODO > PASS IN ENVIRONMENT VARIABLES
         signOptions: { expiresIn: '3600s' }
       })
     })
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, RolesGuard],
   exports: [AuthService]
 })
 export class AuthModule {}
