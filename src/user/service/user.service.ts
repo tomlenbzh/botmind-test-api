@@ -2,9 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOneOptions, Repository } from 'typeorm';
 import { catchError, from, map, Observable, switchMap, throwError } from 'rxjs';
-
-import { UserEntity } from '../utils/models/user.entity';
 import { IUser } from '../utils/models/user.interface';
+import { UserEntity } from '../utils/models/user.entity';
 import { AuthService } from 'src/auth/service/auth.service';
 
 @Injectable()
@@ -27,6 +26,7 @@ export class UserService {
         newUser.name = user.name;
         newUser.userName = user.userName;
         newUser.email = user.email;
+        newUser.role = user.role;
         newUser.password = passwordHash;
 
         return from(this.userRepository.save(newUser)).pipe(
@@ -58,7 +58,6 @@ export class UserService {
    * @returns   { Observable<IUser> }
    */
   findOne(id: number): Observable<IUser> {
-    console.log('LOL');
     const options: FindOneOptions = { where: { id } };
     return from(this.userRepository.findOne(options)).pipe(map((user: IUser) => this.getUserWithoutPassword(user)));
   }
@@ -77,41 +76,41 @@ export class UserService {
    * Updates one User entity with the corresponding id.
    *
    * @param     { number }      id
+   * @param     { IUser }       user
    * @returns   { Observable<any> }
    */
   updateOne(id: number, user: IUser): Observable<any> {
-    delete user.email;
-    delete user.password;
+    const { email, password, role, ...partialUser } = user;
+    return from(this.userRepository.update(id, partialUser));
+  }
 
+  updateUserRole(id: number, user: IUser): Observable<any> {
     return from(this.userRepository.update(id, user));
   }
 
-  login(user: IUser): Observable<string> {
-    console.log('LOGIN ?');
+  login(user: IUser): Observable<any> {
     return this.validateUser(user.email, user.password).pipe(
-      switchMap((user: IUser) =>
-        user
+      switchMap((user: IUser) => {
+        return user
           ? this.authService.generateJwtToken(user).pipe(map((token: string) => token))
-          : '[ERROR] : WRONG CREDENTIALS'
-      )
+          : '[ERROR] : WRONG CREDENTIALS';
+      })
     );
   }
 
   validateUser(email: string, password: string): Observable<IUser> {
-    console.log('where ? ', email);
     return from(this.userRepository.findOne({ where: { email } })).pipe(
-      switchMap((user: IUser) =>
-        this.authService.comparePasswords(password, user.password).pipe(
+      switchMap((user: IUser) => {
+        return this.authService.comparePasswords(password, user.password).pipe(
           map((match: boolean) => {
             if (match) {
-              console.log('MATCH ?');
               return this.getUserWithoutPassword(user);
             } else {
               throw Error;
             }
           })
-        )
-      )
+        );
+      })
     );
   }
 
