@@ -14,8 +14,8 @@ export class UserController {
   @Post()
   create(@Body() user: IUser): Observable<IUser | any> {
     return this.userService.create(user).pipe(
-      map((user: IUser) => user),
-      catchError((error: any) => of({ error: error?.message }))
+      map((user: IUser) => user)
+      // catchError((error: any) => of({ error: error?.message }))
     );
   }
 
@@ -23,7 +23,7 @@ export class UserController {
   login(@Body() user: IUser): Observable<any> {
     return this.userService.login(user).pipe(
       map((jwt: string) => ({ accessToken: jwt })),
-      catchError((error: any) => of({ error: error?.message }))
+      catchError((error: Error) => of(error))
     );
   }
 
@@ -36,7 +36,7 @@ export class UserController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Get()
   index(@Query('page') page = 1, @Query('page') limit = 10): Observable<Pagination<IUser>> {
-    limit = limit > 100 ? 100 : limit; // * Restric the maximium number of returned items.
+    limit = limit > 100 ? 100 : limit; // * Restrict the maximium number of returned items.
     return this.userService.paginate({ page, limit, route: 'http://localhost:3000/users' });
   }
 
@@ -48,12 +48,21 @@ export class UserController {
   @hasRoles(UserRole.ADMIN)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Put(':id/role')
-  updateUserRole(@Param('id') id: string, @Body() user: IUser): Observable<IUser> {
+  updateUserRole(@Param('id') id: string, @Body() user: IUser): Observable<any> {
     return this.userService.updateUserRole(Number(id), user);
   }
 
+  /**
+   * Updates one user's information.
+   *
+   * @param     { string }      id
+   * @param     { string }      user
+   * @returns   { Observable<any> }
+   */
   @Put(':id')
   updateOne(@Param('id') id: string, @Body() user: IUser): Observable<any> {
-    return this.userService.updateOne(Number(id), user);
+    return this.userService
+      .updateOne(Number(id), user)
+      .pipe(catchError((error: Error) => of({ error: error?.message })));
   }
 }
