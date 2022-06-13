@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOneOptions, Repository } from 'typeorm';
-import { catchError, from, map, Observable, switchMap, throwError } from 'rxjs';
+import { catchError, from, map, Observable, of, switchMap, throwError } from 'rxjs';
 import { IUser, UserRole } from '../utils/models/user.interface';
 import { UserEntity } from '../utils/models/user.entity';
 import { AuthService } from 'src/auth/service/auth.service';
@@ -60,7 +60,10 @@ export class UserService {
    */
   findOne(id: number): Observable<IUser> {
     const options: FindOneOptions = { where: { id } };
-    return from(this.userRepository.findOne(options)).pipe(map((user: IUser) => this.getUserWithoutPassword(user)));
+    return from(this.userRepository.findOne(options)).pipe(
+      switchMap((user: IUser) => of(this.getUserWithoutPassword(user))),
+      catchError(() => throwError(() => new NotFoundException()))
+    );
   }
 
   /**
@@ -70,7 +73,9 @@ export class UserService {
    * @returns   { Observable<any> }
    */
   deleteOne(id: number): Observable<any> {
-    return from(this.userRepository.delete(id));
+    return from(this.userRepository.delete(id)).pipe(
+      catchError(() => throwError(() => new BadRequestException(`User could not be deleted`)))
+    );
   }
 
   /**
@@ -80,9 +85,12 @@ export class UserService {
    * @param     { IUser }       user
    * @returns   { Observable<any> }
    */
-  updateOne(id: number, user: IUser): Observable<any> {
+  updateOne(id: number, user: IUser): Observable<IUser> {
     const { email, password, role, ...partialUser } = user;
-    return from(this.userRepository.update(id, partialUser));
+    return from(this.userRepository.update(id, partialUser)).pipe(
+      switchMap(() => this.findOne(id)),
+      catchError((error: Error) => throwError(() => error))
+    );
   }
 
   /**
@@ -92,8 +100,11 @@ export class UserService {
    * @param     { IUser }       user
    * @returns   { Observable<any> }
    */
-  updateUserRole(id: number, user: IUser): Observable<any> {
-    return from(this.userRepository.update(id, user));
+  updateUserRole(id: number, user: IUser): Observable<IUser> {
+    return from(this.userRepository.update(id, user)).pipe(
+      switchMap(() => this.findOne(id)),
+      catchError((error: Error) => throwError(() => error))
+    );
   }
 
   /**
@@ -111,42 +122,49 @@ export class UserService {
     );
   }
 
-  login(user: IUser): Observable<any> {
-    console.log('LOGIN', user);
+  /**
+   * Returns a JSON Web Token if the user is properly authenticated.
+   *
+   * @param     { IUser }      user
+   * @returns   { Observable<any> }
+   */
+  login(user: IUser): Observable<string> {
     return this.validateUser(user.email, user.password).pipe(
       switchMap((validatedUser: IUser) => {
         return validatedUser
           ? this.authService.generateJwtToken(validatedUser).pipe(map((token: string) => token))
-          : throwError(() => new Error('WRONG CREDENTIALS'));
-      }),
-      catchError((error: any) => throwError(() => new Error(error)))
-    );
-  }
-
-  // findUserByEmail(email: string): Observable<IUser> {
-  //   return from(this.userRepository.findOne({ where: { email } }));
-  // }
-
-  private validateUser(email: string, password: string): Observable<IUser> {
-    return from(this.userRepository.findOne({ where: { email } })).pipe(
-      switchMap((user: IUser) => {
-        console.log('validateUser', user);
-        console.log('credentials', email, password);
-
-        return this.authService.comparePasswords(password, user.password).pipe(
-          map((match: boolean) => {
-            console.log('MATCH ?', match);
-            if (match === true) {
-              return this.getUserWithoutPassword(user);
-            } else {
-              throwError(() => ({ message: 'FUCK' }));
-            }
-          })
-        );
+          : throwError(() => new BadRequestException('Bad credentials'));
       })
     );
   }
 
+  /**
+   * Returns a IUser item if :
+   * - A user with the corresponding email is found.
+   * - If the user's hashed password matches with the password parameter.
+   *
+   * @param     { string }      email
+   * @param     { string }      password
+   * @returns   { Observable<IUser> }
+   */
+  private validateUser(email: string, password: string): Observable<IUser> {
+    return from(this.userRepository.findOne({ where: { email } })).pipe(
+      switchMap((user: IUser) => {
+        return user
+          ? this.authService
+              .comparePasswords(password, user.password)
+              .pipe(map((match: boolean) => (match ? this.getUserWithoutPassword(user) : null)))
+          : throwError(() => new BadRequestException('No account was found for this email'));
+      })
+    );
+  }
+
+  /**
+   * Returns a IUser item excluding the user's password.
+   *
+   * @param     { IUser }      user
+   * @returns   { IUser }
+   */
   private getUserWithoutPassword(user: IUser): IUser {
     const { password, ...result } = user;
     return result;
