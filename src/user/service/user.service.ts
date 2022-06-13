@@ -2,9 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOneOptions, Repository } from 'typeorm';
 import { catchError, from, map, Observable, switchMap, throwError } from 'rxjs';
-import { IUser } from '../utils/models/user.interface';
+import { IUser, UserRole } from '../utils/models/user.interface';
 import { UserEntity } from '../utils/models/user.entity';
 import { AuthService } from 'src/auth/service/auth.service';
+import { paginate, Pagination, IPaginationOptions } from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class UserService {
@@ -26,7 +27,7 @@ export class UserService {
         newUser.name = user.name;
         newUser.userName = user.userName;
         newUser.email = user.email;
-        newUser.role = user.role;
+        newUser.role = UserRole.USER;
         newUser.password = passwordHash;
 
         return from(this.userRepository.save(newUser)).pipe(
@@ -84,38 +85,66 @@ export class UserService {
     return from(this.userRepository.update(id, partialUser));
   }
 
+  /**
+   * Updates the role of the User entity with the corresponding id.
+   *
+   * @param     { number }      id
+   * @param     { IUser }       user
+   * @returns   { Observable<any> }
+   */
   updateUserRole(id: number, user: IUser): Observable<any> {
     return from(this.userRepository.update(id, user));
   }
 
-  login(user: IUser): Observable<any> {
-    return this.validateUser(user.email, user.password).pipe(
-      switchMap((user: IUser) => {
-        return user
-          ? this.authService.generateJwtToken(user).pipe(map((token: string) => token))
-          : '[ERROR] : WRONG CREDENTIALS';
+  /**
+   * Returns a paginated list of IUser items.
+   *
+   * @param     { IPaginationOptions }      options
+   * @returns   { Observable<Pagination<IUser>> }
+   */
+  paginate(options: IPaginationOptions): Observable<Pagination<IUser>> {
+    return from(paginate<IUser>(this.userRepository, options)).pipe(
+      map((pageContent: Pagination<IUser>) => {
+        pageContent.items.forEach((user: IUser) => delete user.password);
+        return pageContent;
       })
     );
   }
 
-  validateUser(email: string, password: string): Observable<IUser> {
+  login(user: IUser): Observable<any> {
+    console.log('LOGIN', user);
+    return this.validateUser(user.email, user.password).pipe(
+      switchMap((validatedUser: IUser) => {
+        return validatedUser
+          ? this.authService.generateJwtToken(validatedUser).pipe(map((token: string) => token))
+          : throwError(() => new Error('WRONG CREDENTIALS'));
+      }),
+      catchError((error: any) => throwError(() => new Error(error)))
+    );
+  }
+
+  // findUserByEmail(email: string): Observable<IUser> {
+  //   return from(this.userRepository.findOne({ where: { email } }));
+  // }
+
+  private validateUser(email: string, password: string): Observable<IUser> {
     return from(this.userRepository.findOne({ where: { email } })).pipe(
       switchMap((user: IUser) => {
+        console.log('validateUser', user);
+        console.log('credentials', email, password);
+
         return this.authService.comparePasswords(password, user.password).pipe(
           map((match: boolean) => {
-            if (match) {
+            console.log('MATCH ?', match);
+            if (match === true) {
               return this.getUserWithoutPassword(user);
             } else {
-              throw Error;
+              throwError(() => ({ message: 'FUCK' }));
             }
           })
         );
       })
     );
-  }
-
-  findUserByEmail(email: string): Observable<IUser> {
-    return from(this.userRepository.findOne({ where: { email } }));
   }
 
   private getUserWithoutPassword(user: IUser): IUser {
