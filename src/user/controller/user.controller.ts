@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { Pagination } from 'nestjs-typeorm-paginate';
-import { catchError, map, Observable, of } from 'rxjs';
+import { catchError, map, Observable, switchMap } from 'rxjs';
 import { hasRoles } from 'src/auth/decorators/roles.decorator';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
@@ -14,21 +14,28 @@ export class UserController {
   @Post()
   create(@Body() user: IUser): Observable<IUser | any> {
     return this.userService.create(user).pipe(
-      map((user: IUser) => user)
-      // catchError((error: any) => of({ error: error?.message }))
+      map((user: IUser) => user),
+      catchError((error: Error) => {
+        throw error;
+      })
     );
   }
 
   @Post('login')
   login(@Body() user: IUser): Observable<any> {
     return this.userService.login(user).pipe(
-      map((jwt: string) => ({ accessToken: jwt })),
-      catchError((error: Error) => of(error))
+      switchMap((token: string) =>
+        this.userService.findOneByMail(user.email).pipe(map((res: IUser) => ({ token, user: res })))
+      ),
+      catchError((error: Error) => {
+        throw error;
+      })
     );
   }
 
   @Get(':id')
   findOne(@Param('id') id: string): Observable<IUser> {
+    console.log(1);
     return this.userService.findOne(Number(id));
   }
 
@@ -61,8 +68,10 @@ export class UserController {
    */
   @Put(':id')
   updateOne(@Param('id') id: string, @Body() user: IUser): Observable<any> {
-    return this.userService
-      .updateOne(Number(id), user)
-      .pipe(catchError((error: Error) => of({ error: error?.message })));
+    return this.userService.updateOne(Number(id), user).pipe(
+      catchError((error: Error) => {
+        throw error;
+      })
+    );
   }
 }

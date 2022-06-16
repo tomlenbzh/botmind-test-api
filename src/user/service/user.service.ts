@@ -24,7 +24,7 @@ export class UserService {
     return this.authService.hashPassword(user.password).pipe(
       switchMap((passwordHash: string) => {
         const newUser = new UserEntity();
-        newUser.name = user.name;
+        newUser.name = user?.name || '';
         newUser.userName = user.userName;
         newUser.email = user.email;
         newUser.role = UserRole.USER;
@@ -32,7 +32,9 @@ export class UserService {
 
         return from(this.userRepository.save(newUser)).pipe(
           map((user: IUser) => this.getUserWithoutPassword(user)),
-          catchError((error) => throwError(() => new Error(error)))
+          catchError(() =>
+            throwError(() => new BadRequestException('A user with the same email or username already exists'))
+          )
         );
       })
     );
@@ -61,6 +63,13 @@ export class UserService {
   findOne(id: number): Observable<IUser> {
     const options: FindOneOptions = { where: { id } };
     return from(this.userRepository.findOne(options)).pipe(
+      switchMap((user: IUser) => of(this.getUserWithoutPassword(user))),
+      catchError(() => throwError(() => new NotFoundException()))
+    );
+  }
+
+  findOneByMail(email: string): Observable<IUser> {
+    return from(this.userRepository.findOne({ where: { email } })).pipe(
       switchMap((user: IUser) => of(this.getUserWithoutPassword(user))),
       catchError(() => throwError(() => new NotFoundException()))
     );
