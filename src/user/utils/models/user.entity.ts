@@ -1,8 +1,10 @@
-import { BeforeInsert, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { GenericEntity } from 'src/generic/generic.entity';
+import { PostEntity } from 'src/posts/utils/models/post.entity';
+import { BeforeInsert, Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { UserRole } from './user.interface';
 
 @Entity()
-export class UserEntity {
+export class UserEntity extends GenericEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -25,4 +27,9 @@ export class UserEntity {
   emailToLowerCase(): void {
     this.email = this.email.toLowerCase();
   }
+
+  @OneToMany(() => PostEntity, (post: PostEntity) => post.user)
+  posts: PostEntity[];
+  // @OneToMany(() => PostEntity, (post) => post.author)
+  // posts: PostEntity[];
 }
