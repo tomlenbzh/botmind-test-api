@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOneOptions, Repository } from 'typeorm';
+import { FindOneOptions, FindOptionsSelect, Repository } from 'typeorm';
 import { catchError, from, map, Observable, of, switchMap, throwError } from 'rxjs';
 import { IUser, UserRole } from '../utils/models/user.interface';
 import { UserEntity } from '../utils/models/user.entity';
@@ -157,7 +157,7 @@ export class UserService {
    * @returns   { Observable<IUser> }
    */
   private validateUser(email: string, password: string): Observable<IUser> {
-    return from(this.userRepository.findOne({ where: { email } })).pipe(
+    return from(this.userRepository.findOne({ where: { email }, select: ['id', 'email', 'password'] })).pipe(
       switchMap((user: IUser) => {
         return user
           ? this.authService

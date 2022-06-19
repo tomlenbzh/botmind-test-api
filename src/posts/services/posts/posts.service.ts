@@ -4,7 +4,7 @@ import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginat
 import { catchError, from, map, Observable, switchMap, throwError } from 'rxjs';
 import { PostEntity } from 'src/posts/utils/models/post.entity';
 import { IPost } from 'src/posts/utils/models/post.interface';
-import { FindOneOptions, Repository } from 'typeorm';
+import { FindOneOptions, FindOptionsOrder, Repository } from 'typeorm';
 
 @Injectable()
 export class PostsService {
@@ -13,30 +13,30 @@ export class PostsService {
   create(post: IPost): Observable<IPost> {
     return from(this.postsRepository.save(post)).pipe(
       map((createdPost: IPost) => createdPost),
-      catchError((error) => {
-        console.log('ERROR', error);
-        console.log('post', post);
-        return throwError(() => new BadRequestException('Your post could not be uploaded'));
-      })
+      catchError(() => throwError(() => new BadRequestException('Your post could not be uploaded')))
     );
   }
 
   findOne(id: number): Observable<IPost> {
-    const options: FindOneOptions = { where: { id }, relations: ['user'] };
+    const relations = ['user', 'likes', 'likes.user'];
+    const options: FindOneOptions = { where: { id }, relations };
+
     return from(this.postsRepository.findOne(options)).pipe(
       map((post: IPost) => post),
-      catchError(() => throwError(() => new NotFoundException()))
+      catchError(() => throwError(() => new NotFoundException('Post could not be found')))
     );
   }
 
   deleteOne(id: number): Observable<any> {
     return from(this.postsRepository.delete(id)).pipe(
-      catchError(() => throwError(() => new BadRequestException(`User could not be deleted`)))
+      catchError(() => throwError(() => new BadRequestException(`Post could not be deleted`)))
     );
   }
 
   findAll(): Observable<IPost[]> {
-    return from(this.postsRepository.find({ relations: ['user'], order: { createdAt: 'DESC' } }));
+    const relations: string[] = ['user', 'likes', 'likes.user'];
+    const order: FindOptionsOrder<IPost> = { createdAt: 'DESC' };
+    return from(this.postsRepository.find({ relations, order }));
   }
 
   updateOne(id: number, post: IPost): Observable<IPost> {
@@ -47,18 +47,20 @@ export class PostsService {
   }
 
   paginateAll(options: IPaginationOptions): Observable<Pagination<IPost>> {
-    return from(
-      paginate<IPost>(this.postsRepository, options, { relations: ['user'], order: { createdAt: 'DESC' } })
-    ).pipe(map((posts: Pagination<IPost>) => posts));
+    const relations: string[] = ['user', 'likes', 'likes.user'];
+    const order: FindOptionsOrder<IPost> = { createdAt: 'DESC' };
+
+    return from(paginate<IPost>(this.postsRepository, options, { relations, order })).pipe(
+      map((posts: Pagination<IPost>) => posts)
+    );
   }
 
   paginateByUser(options: IPaginationOptions, id: number): Observable<Pagination<IPost>> {
-    return from(
-      paginate<IPost>(this.postsRepository, options, {
-        where: { user: { id } },
-        relations: ['user'],
-        order: { createdAt: 'DESC' }
-      })
-    ).pipe(map((posts: Pagination<IPost>) => posts));
+    const relations: string[] = ['user', 'likes', 'likes.user'];
+    const order: FindOptionsOrder<IPost> = { createdAt: 'DESC' };
+
+    return from(paginate<IPost>(this.postsRepository, options, { where: { user: { id } }, relations, order })).pipe(
+      map((posts: Pagination<IPost>) => posts)
+    );
   }
 }

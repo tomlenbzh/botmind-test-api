@@ -1,8 +1,9 @@
 import { GenericEntity } from 'src/generic/generic.entity';
+import { LikeEntity } from 'src/likes/models/like.entity';
 import { UserEntity } from 'src/user/utils/models/user.entity';
-import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 
-@Entity()
+@Entity({ name: 'posts' })
 export class PostEntity extends GenericEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -16,4 +17,7 @@ export class PostEntity extends GenericEntity {
   @ManyToOne(() => UserEntity, (user: UserEntity) => user.posts, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   user: UserEntity;
+
+  @OneToMany(() => LikeEntity, (like: LikeEntity) => like.post, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
+  likes: LikeEntity[];
 }

@@ -22,9 +22,6 @@ export class PostsController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page = 1,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit = 10
   ) {
-    console.log('page', page);
-    console.log('limit', limit);
-
     limit = limit > 100 ? 100 : limit;
 
     return this.postsService.paginateAll({
