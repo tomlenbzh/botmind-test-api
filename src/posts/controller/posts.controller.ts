@@ -39,7 +39,7 @@ export class PostsController {
     return this.postsService.paginateAll({
       limit: limit,
       page: Number(page),
-      route: 'http://localhost:3000/api/posts'
+      route: '/posts'
     });
   }
 
@@ -60,7 +60,7 @@ export class PostsController {
       {
         limit: Number(limit),
         page: Number(page),
-        route: `http://localhost:3000/api/posts/user/${userId}`
+        route: `/posts/user/${userId}`
       },
       Number(userId)
     );

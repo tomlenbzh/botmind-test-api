@@ -24,6 +24,9 @@ export class UserEntity extends GenericEntity {
   @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
   role: UserRole;
 
+  @Column({ default: 'fr' })
+  lang: string;
+
   @BeforeInsert()
   emailToLowerCase(): void {
     this.email = this.email.toLowerCase();

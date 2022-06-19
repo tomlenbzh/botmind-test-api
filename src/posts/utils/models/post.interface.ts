@@ -7,4 +7,5 @@ export interface IPost {
   createdAt?: Date;
   updatedAt?: Date;
   user?: IUser;
+  likes?: IPost[];
 }

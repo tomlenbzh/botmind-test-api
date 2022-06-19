@@ -8,10 +8,10 @@ export class PostEntity extends GenericEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ length: 50 })
+  @Column({ length: 100 })
   title: string;
 
-  @Column('text')
+  @Column({ length: 500 })
   body: string;
 
   @ManyToOne(() => UserEntity, (user: UserEntity) => user.posts, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
