@@ -1,4 +1,4 @@
-import { IUser } from 'src/user/utils/models/user.interface';
+import { IUser } from '@user/utils/models/user.interface';
 
 export interface IPost {
   id?: number;

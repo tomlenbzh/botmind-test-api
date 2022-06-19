@@ -6,13 +6,11 @@ describe('LikesService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [LikesService],
+      providers: [LikesService]
     }).compile();
 
     service = module.get<LikesService>(LikesService);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
+  it('should be defined', () => expect(service).toBeDefined());
 });

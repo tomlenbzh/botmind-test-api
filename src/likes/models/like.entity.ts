@@ -1,7 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { GenericEntity } from 'src/generic/generic.entity';
-import { UserEntity } from 'src/user/utils/models/user.entity';
-import { PostEntity } from 'src/posts/utils/models/post.entity';
+import { GenericEntity } from '@shared/generic.entity';
+import { PostEntity } from '@posts/utils/models/post.entity';
+import { UserEntity } from '@user/utils/models/user.entity';
 
 export enum LikeType {
   LIKE = 'like',

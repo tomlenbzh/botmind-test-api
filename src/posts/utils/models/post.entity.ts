@@ -1,7 +1,7 @@
-import { GenericEntity } from 'src/generic/generic.entity';
-import { LikeEntity } from 'src/likes/models/like.entity';
-import { UserEntity } from 'src/user/utils/models/user.entity';
 import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import { GenericEntity } from '@shared/generic.entity';
+import { LikeEntity } from '@likes/models/like.entity';
+import { UserEntity } from '@user/utils/models/user.entity';
 
 @Entity({ name: 'posts' })
 export class PostEntity extends GenericEntity {

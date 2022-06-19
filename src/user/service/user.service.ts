@@ -1,11 +1,18 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOneOptions, FindOptionsSelect, Repository } from 'typeorm';
+import { FindOneOptions, Repository } from 'typeorm';
 import { catchError, from, map, Observable, of, switchMap, throwError } from 'rxjs';
 import { IUser, UserRole } from '../utils/models/user.interface';
 import { UserEntity } from '../utils/models/user.entity';
 import { AuthService } from 'src/auth/service/auth.service';
 import { paginate, Pagination, IPaginationOptions } from 'nestjs-typeorm-paginate';
+import {
+  ACCOUNT_NOT_FOUND,
+  BAD_CREDENTIALS,
+  CREDENTIALS_ALREADY_EXIST,
+  USER_CANNOT_BE_DELETED,
+  USER_NOT_FOUND
+} from 'src/utils/constants/errors.constants';
 
 @Injectable()
 export class UserService {
@@ -15,7 +22,7 @@ export class UserService {
   ) {}
 
   /**
-   * Creates a new User entity if it does not already exists in database.
+   * Creates a new User entity if it does not already exist in database.
    *
    * @param     { IUser }      user
    * @returns   { Observable<IUser> }
@@ -32,9 +39,7 @@ export class UserService {
 
         return from(this.userRepository.save(newUser)).pipe(
           map((user: IUser) => this.getUserWithoutPassword(user)),
-          catchError(() =>
-            throwError(() => new BadRequestException('A user with the same email or username already exists'))
-          )
+          catchError(() => throwError(() => new BadRequestException(CREDENTIALS_ALREADY_EXIST)))
         );
       })
     );
@@ -64,14 +69,14 @@ export class UserService {
     const options: FindOneOptions = { where: { id } };
     return from(this.userRepository.findOne(options)).pipe(
       switchMap((user: IUser) => of(this.getUserWithoutPassword(user))),
-      catchError(() => throwError(() => new NotFoundException()))
+      catchError(() => throwError(() => new NotFoundException(USER_NOT_FOUND)))
     );
   }
 
   findOneByMail(email: string): Observable<IUser> {
     return from(this.userRepository.findOne({ where: { email } })).pipe(
       switchMap((user: IUser) => of(this.getUserWithoutPassword(user))),
-      catchError(() => throwError(() => new NotFoundException()))
+      catchError(() => throwError(() => new NotFoundException(USER_NOT_FOUND)))
     );
   }
 
@@ -83,7 +88,7 @@ export class UserService {
    */
   deleteOne(id: number): Observable<any> {
     return from(this.userRepository.delete(id)).pipe(
-      catchError(() => throwError(() => new BadRequestException(`User could not be deleted`)))
+      catchError(() => throwError(() => new BadRequestException(USER_CANNOT_BE_DELETED)))
     );
   }
 
@@ -142,7 +147,7 @@ export class UserService {
       switchMap((validatedUser: IUser) => {
         return validatedUser
           ? this.authService.generateJwtToken(validatedUser).pipe(map((token: string) => token))
-          : throwError(() => new BadRequestException('Bad credentials'));
+          : throwError(() => new BadRequestException(BAD_CREDENTIALS));
       })
     );
   }
@@ -163,7 +168,7 @@ export class UserService {
           ? this.authService
               .comparePasswords(password, user.password)
               .pipe(map((match: boolean) => (match ? this.getUserWithoutPassword(user) : null)))
-          : throwError(() => new BadRequestException('No account was found for this email'));
+          : throwError(() => new BadRequestException(ACCOUNT_NOT_FOUND));
       })
     );
   }
