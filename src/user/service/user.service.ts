@@ -29,13 +29,14 @@ export class UserService {
    */
   create(user: IUser): Observable<IUser> {
     return this.authService.hashPassword(user.password).pipe(
-      switchMap((passwordHash: string) => {
+      switchMap((hash: string) => {
         const newUser = new UserEntity();
         newUser.name = user?.name || '';
         newUser.userName = user.userName;
         newUser.email = user.email;
         newUser.role = UserRole.USER;
-        newUser.password = passwordHash;
+        newUser.lang = user.lang;
+        newUser.password = hash;
 
         return from(this.userRepository.save(newUser)).pipe(
           map((user: IUser) => this.getUserWithoutPassword(user)),

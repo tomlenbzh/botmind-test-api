@@ -35,7 +35,7 @@ export class PostsService {
    */
   findAll(): Observable<IPost[]> {
     const relations: string[] = ['user', 'likes', 'likes.user'];
-    const order: FindOptionsOrder<IPost> = { createdAt: 'DESC' };
+    const order: FindOptionsOrder<IPost> = { updatedAt: 'DESC' };
     return from(this.postsRepository.find({ relations, order }));
   }
 
@@ -75,7 +75,8 @@ export class PostsService {
    * @returns   { Observable<IPost> }
    */
   updateOne(id: number, post: IPost): Observable<IPost> {
-    return from(this.postsRepository.update(id, post)).pipe(
+    const { likes, updatedAt, ...partialPost } = post;
+    return from(this.postsRepository.update(id, partialPost)).pipe(
       switchMap(() => this.findOne(id)),
       catchError((error: Error) => throwError(() => new BadRequestException(error)))
     );
@@ -89,7 +90,7 @@ export class PostsService {
    */
   paginateAll(options: IPaginationOptions): Observable<Pagination<IPost>> {
     const relations: string[] = ['user', 'likes', 'likes.user'];
-    const order: FindOptionsOrder<IPost> = { createdAt: 'DESC' };
+    const order: FindOptionsOrder<IPost> = { updatedAt: 'DESC' };
 
     return from(paginate<IPost>(this.postsRepository, options, { relations, order })).pipe(
       map((posts: Pagination<IPost>) => posts)
@@ -104,7 +105,7 @@ export class PostsService {
    */
   paginateByUser(options: IPaginationOptions, id: number): Observable<Pagination<IPost>> {
     const relations: string[] = ['user', 'likes', 'likes.user'];
-    const order: FindOptionsOrder<IPost> = { createdAt: 'DESC' };
+    const order: FindOptionsOrder<IPost> = { updatedAt: 'DESC' };
 
     return from(paginate<IPost>(this.postsRepository, options, { where: { user: { id } }, relations, order })).pipe(
       map((posts: Pagination<IPost>) => posts)
