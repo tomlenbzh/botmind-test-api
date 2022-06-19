@@ -1,23 +1,23 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserModule } from '@user/user.module';
+import { AuthModule } from '@auth/auth.module';
+import { PostsModule } from '@posts/posts.module';
+import { LikesModule } from '@likes/likes.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UserModule } from './user/user.module';
-import { AuthModule } from './auth/auth.module';
-import { PostsModule } from './posts/posts.module';
-import { LikesModule } from './likes/likes.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
-      type: 'mysql', // TODO > PASS IT AS ENVIRONMENT VARIABLES
-      host: 'localhost', // TODO > PASS IT AS ENVIRONMENT VARIABLES
-      port: 8889, // TODO > PASS IT AS ENVIRONMENT VARIABLES
-      username: 'root', // TODO > PASS IT AS ENVIRONMENT VARIABLES
-      password: 'root', // TODO > PASS IT AS ENVIRONMENT VARIABLES
-      database: 'botmind_test_db', // TODO > PASS IT AS ENVIRONMENT VARIABLES
+      type: 'mysql',
+      host: process.env.DATABASE_HOST,
+      port: Number(process.env.DATABASE_PORT),
+      username: process.env.DATABASE_USERNAME,
+      password: process.env.DATABASE_PASSWORD,
+      database: process.env.DATABASE_NAME,
       autoLoadEntities: true,
       entities: [],
       synchronize: true

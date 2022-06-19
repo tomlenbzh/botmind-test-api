@@ -1,10 +1,9 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { TOKEN_EXPIRES_IN } from '@app/utils/constants/token.constants';
 import { AuthService } from './service/auth.service';
-import { AuthController } from './controller/auth.controller';
-import { UserModule } from 'src/user/user.module';
-import { SECRET } from 'src/constants';
+import { UserModule } from '@user/user.module';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { JwtStrategy } from './guards/jwt-strategy';
 import { RolesGuard } from './guards/roles.guard';
@@ -16,12 +15,11 @@ import { RolesGuard } from './guards/roles.guard';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (config: ConfigService) => ({
-        secret: SECRET, // TODO > PASS IN ENVIRONMENT VARIABLES
-        signOptions: { expiresIn: '3600s' }
+        secret: config.get('JWT_SECRET'),
+        signOptions: { expiresIn: TOKEN_EXPIRES_IN }
       })
     })
   ],
-  controllers: [AuthController],
   providers: [AuthService, JwtStrategy, JwtAuthGuard, RolesGuard],
   exports: [AuthService]
 })

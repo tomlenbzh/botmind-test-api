@@ -1,7 +1,7 @@
-import { GenericEntity } from 'src/generic/generic.entity';
-import { LikeEntity } from 'src/likes/models/like.entity';
-import { PostEntity } from 'src/posts/utils/models/post.entity';
 import { BeforeInsert, Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { GenericEntity } from '@shared/generic.entity';
+import { LikeEntity } from '@likes/models/like.entity';
+import { PostEntity } from '@posts/utils/models/post.entity';
 import { UserRole } from './user.interface';
 
 @Entity({ name: 'users' })

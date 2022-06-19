@@ -16,6 +16,14 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@app/*": ["src/*"],
+      "@auth/*": ["src/auth/*"],
+      "@shared/*": ["src/shared/*"],
+      "@user/*": ["src/user/*"],
+      "@posts/*": ["src/posts/*"],
+      "@likes/*": ["src/likes/*"]
+    }
   }
 }
