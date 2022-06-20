@@ -27,6 +27,12 @@ export class UserEntity extends GenericEntity {
   @Column({ default: 'fr' })
   lang: string;
 
+  @Column({ default: 'No description' })
+  description: string;
+
+  @Column({ default: '' })
+  image: string;
+
   @BeforeInsert()
   emailToLowerCase(): void {
     this.email = this.email.toLowerCase();

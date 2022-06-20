@@ -13,4 +13,5 @@ export interface IUser {
   lang?: string;
   createdAt?: Date;
   updatedAt?: Date;
+  description?: string;
 }

@@ -37,10 +37,14 @@ export class UserService {
         newUser.role = UserRole.USER;
         newUser.lang = user.lang;
         newUser.password = hash;
+        newUser.description = user.description;
 
         return from(this.userRepository.save(newUser)).pipe(
           map((user: IUser) => this.getUserWithoutPassword(user)),
-          catchError(() => throwError(() => new BadRequestException(CREDENTIALS_ALREADY_EXIST)))
+          catchError((err) => {
+            console.log('ERR', err);
+            return throwError(() => new BadRequestException(CREDENTIALS_ALREADY_EXIST));
+          })
         );
       })
     );
