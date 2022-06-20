@@ -13,10 +13,11 @@ import { AppService } from './app.service';
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host: 'us-cdbr-east-05.cleardb.net',
-      username: 'b270ec79737817',
-      password: '26796824',
-      database: 'heroku_6a5e9e80b0fde01',
+      host: process.env.DATABASE_HOST,
+      port: Number(process.env.DATABASE_PORT),
+      username: process.env.DATABASE_USERNAME,
+      password: process.env.DATABASE_PASSWORD,
+      database: process.env.DATABASE_NAME,
       autoLoadEntities: true,
       entities: [],
       synchronize: true
