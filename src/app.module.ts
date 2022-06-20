@@ -18,7 +18,8 @@ import { AppService } from './app.service';
       password: '26796824',
       database: 'heroku_6a5e9e80b0fde01',
       autoLoadEntities: true,
-      entities: []
+      entities: [],
+      synchronize: true
     }),
     UserModule,
     AuthModule,
