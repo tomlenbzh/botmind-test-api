@@ -1,4 +1,5 @@
-import { IUser } from '@user/utils/models/user.interface';
+import { IComment } from '../../../comments/models/comment.interface';
+import { IUser } from '../../../user/utils/models/user.interface';
 
 export interface IPost {
   id?: number;
@@ -8,4 +9,5 @@ export interface IPost {
   updatedAt?: Date;
   user?: IUser;
   likes?: IPost[];
+  comments?: IComment[];
 }

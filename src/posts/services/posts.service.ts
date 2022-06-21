@@ -34,8 +34,8 @@ export class PostsService {
    * @returns   { Observable<IPost[]> }
    */
   findAll(): Observable<IPost[]> {
-    const relations: string[] = ['user', 'likes', 'likes.user'];
-    const order: FindOptionsOrder<IPost> = { updatedAt: 'DESC' };
+    const relations: string[] = ['user', 'likes', 'likes.user', 'comments', 'comments.user'];
+    const order: FindOptionsOrder<IPost> = { updatedAt: 'DESC', comments: { updatedAt: 'ASC' } };
     return from(this.postsRepository.find({ relations, order }));
   }
 
@@ -46,8 +46,8 @@ export class PostsService {
    * @returns   { Observable<IPost> }
    */
   findOne(id: number): Observable<IPost> {
-    const relations = ['user', 'likes', 'likes.user'];
-    const options: FindOneOptions = { where: { id }, relations };
+    const relations = ['user', 'likes', 'likes.user', 'comments', 'comments.user'];
+    const options: FindOneOptions = { where: { id }, relations, order: { comments: { updatedAt: 'ASC' } } };
 
     return from(this.postsRepository.findOne(options)).pipe(
       map((post: IPost) => post),
@@ -89,8 +89,8 @@ export class PostsService {
    * @returns   { Observable<Pagination<IUser>> }
    */
   paginateAll(options: IPaginationOptions): Observable<Pagination<IPost>> {
-    const relations: string[] = ['user', 'likes', 'likes.user'];
-    const order: FindOptionsOrder<IPost> = { updatedAt: 'DESC' };
+    const relations: string[] = ['user', 'likes', 'likes.user', 'comments', 'comments.user'];
+    const order: FindOptionsOrder<IPost> = { updatedAt: 'DESC', comments: { updatedAt: 'ASC' } };
 
     return from(paginate<IPost>(this.postsRepository, options, { relations, order })).pipe(
       map((posts: Pagination<IPost>) => posts)
@@ -104,8 +104,8 @@ export class PostsService {
    * @returns   { Observable<Pagination<IUser>> }
    */
   paginateByUser(options: IPaginationOptions, id: number): Observable<Pagination<IPost>> {
-    const relations: string[] = ['user', 'likes', 'likes.user'];
-    const order: FindOptionsOrder<IPost> = { updatedAt: 'DESC' };
+    const relations: string[] = ['user', 'likes', 'likes.user', 'comments', 'comments.user'];
+    const order: FindOptionsOrder<IPost> = { updatedAt: 'DESC', comments: { updatedAt: 'ASC' } };
 
     return from(paginate<IPost>(this.postsRepository, options, { where: { user: { id } }, relations, order })).pipe(
       map((posts: Pagination<IPost>) => posts)

@@ -3,6 +3,7 @@ import { GenericEntity } from '@shared/generic.entity';
 import { LikeEntity } from '@likes/models/like.entity';
 import { PostEntity } from '@posts/utils/models/post.entity';
 import { UserRole } from './user.interface';
+import { CommentEntity } from '@app/comments/models/comment.entity';
 
 @Entity({ name: 'users' })
 export class UserEntity extends GenericEntity {
@@ -43,4 +44,10 @@ export class UserEntity extends GenericEntity {
 
   @OneToMany(() => LikeEntity, (like: LikeEntity) => like.user, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
   likes: LikeEntity[];
+
+  @OneToMany(() => CommentEntity, (comment: CommentEntity) => comment.user, {
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE'
+  })
+  comments: LikeEntity[];
 }
