@@ -75,7 +75,7 @@ export class PostsService {
    * @returns   { Observable<IPost> }
    */
   updateOne(id: number, post: IPost): Observable<IPost> {
-    const { likes, updatedAt, ...partialPost } = post;
+    const { likes, comments, updatedAt, ...partialPost } = post;
     return from(this.postsRepository.update(id, partialPost)).pipe(
       switchMap(() => this.findOne(id)),
       catchError((error: Error) => throwError(() => new BadRequestException(error)))
